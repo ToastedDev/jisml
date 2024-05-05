@@ -1,6 +1,6 @@
-import { reference, string, Type } from "./types";
+import { Type } from "./types";
 
-interface TableConfig<T extends Record<string, Type>> {
+export interface TableConfig<T extends Record<string, Type>> {
   name: string;
   columns: {
     [K in keyof T]: {
@@ -10,17 +10,14 @@ interface TableConfig<T extends Record<string, Type>> {
   };
 }
 
-class Table<T extends TableConfig<{}>> {
-  private _config: T;
+export class Table<T extends TableConfig<{}>> {
+  _config: T;
   constructor(config: T) {
     this._config = config;
   }
-  get name() {
-    return this._config.name;
-  }
 }
 
-type TableWithColumns<T extends TableConfig<{}>> = Table<T> & {
+export type TableWithColumns<T extends TableConfig<{}>> = Table<T> & {
   [K in keyof T["columns"]]: {
     name: K;
     type: T["columns"][K];
