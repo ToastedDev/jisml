@@ -24,6 +24,13 @@ test("String type disallows non-strings", () => {
   expect(result.error).toBe("Value must be a string");
 });
 
+test("String type disallows strings longer than the limit", () => {
+  const stringType = string({ length: 3 });
+  const result = stringType.validate("hello") as any;
+  expect(result.valid).toBe(false);
+  expect(result.error).toBe("Value must be less than 3 characters");
+});
+
 test("Number type allows numbers", () => {
   const numberType = number();
   const result = numberType.validate(1) as any;
