@@ -1,5 +1,5 @@
-import { table, TableConfig, TableWithColumns } from "../../schema/table";
-import { number, string, Type } from "../../schema/types";
+import { TableConfig, TableWithColumns } from "../../schema/table";
+import { Type } from "../../schema/types";
 import { DB } from "../index";
 import { QueryPromise } from "./promise";
 

@@ -3,6 +3,7 @@ import { TableConfig, TableWithColumns } from "../schema/table";
 import { DBOptions } from "./options";
 import { InsertQueryBuilder } from "./queries/insert";
 import { SelectQueryBuilder } from "./queries/select";
+import { UpdateQueryBuilder } from "./queries/update";
 
 export class DB {
   private _options: DBOptions;
@@ -54,6 +55,9 @@ export class DB {
   }
   insert<T extends TableConfig<{}>>(table: TableWithColumns<T>) {
     return new InsertQueryBuilder(this, table);
+  }
+  update<T extends TableConfig<{}>>(table: TableWithColumns<T>) {
+    return new UpdateQueryBuilder(this, table);
   }
 }
 

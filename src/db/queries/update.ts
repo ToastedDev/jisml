@@ -2,18 +2,31 @@ import { TableConfig, TableWithColumns } from "../../schema/table";
 import { Type } from "../../schema/types";
 import { DB } from "../index";
 import { Constraint, constraints, numberConstraints } from "./constraints";
+import { QueryPromise } from "./promise";
 
-export class SelectQueryBuilder<T extends TableConfig<{}>> {
+export class UpdateQueryBuilder<
+  T extends TableConfig<{}>
+> extends QueryPromise<void> {
   private _table: TableWithColumns<T>;
   private _db: DB;
+  private _value: T["columns"] = {};
   private _where?: {
     column: keyof T;
     constraint: (typeof constraints)[number];
     value: any;
   };
   constructor(db: DB, table: TableWithColumns<T>) {
+    super();
     this._db = db;
     this._table = table;
+  }
+  set(value: {
+    [K in keyof T["columns"]]?: T["columns"][K] extends Type<infer T>
+      ? T
+      : unknown;
+  }) {
+    this._value = value;
+    return this;
   }
   where<Column extends keyof T["columns"]>(
     column: Column,
@@ -35,31 +48,18 @@ export class SelectQueryBuilder<T extends TableConfig<{}>> {
     return this;
   }
 
-  async first() {
+  async execute() {
     const json = await this._db.getJSON();
     const table = json[this._table._config.name];
     if (this._where) {
       const { column, constraint, value } = this._where;
-      const result = table.find((row: any) =>
+      const index = table.findIndex((row: any) =>
         constraint.check(value, row[column])
       );
-      if (!result) return null;
-      return result;
-    }
-    return table[0];
-  }
-
-  async all() {
-    const json = await this._db.getJSON();
-    const table = json[this._table._config.name];
-    if (this._where) {
-      const { column, constraint, value } = this._where;
-      const results = table.filter((row: any) =>
-        constraint.check(value, row[column])
-      );
-      if (!results?.length) return null;
-      return results;
-    }
-    return table;
+      if (index === -1)
+        throw new Error(`No row found with ${String(column)} of ${value}`);
+      table[index] = Object.assign(table[index], this._value);
+    } else throw new Error("No where clause");
+    await this._db.setJSON(json);
   }
 }
