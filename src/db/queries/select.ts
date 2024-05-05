@@ -1,15 +1,30 @@
-import { table, TableConfig, TableWithColumns } from "../../schema/table";
-import { string, Type } from "../../schema/types";
+import { TableConfig, TableWithColumns } from "../../schema/table";
+import { Type } from "../../schema/types";
 import { DB } from "../index";
 
-type Constraint = "=";
+const constraints = [
+  {
+    symbol: "=",
+    check: (value: string, columnValue: string) => {
+      return value === columnValue;
+    },
+  },
+  {
+    symbol: "!=",
+    check: (value: string, columnValue: string) => {
+      return value !== columnValue;
+    },
+  },
+] as const;
+
+type Constraint = (typeof constraints)[number]["symbol"];
 
 export class SelectQueryBuilder<T extends TableConfig<{}>> {
   private _table: TableWithColumns<T>;
   private _db: DB;
   private _where?: {
     column: keyof T;
-    constraint: Constraint;
+    constraint: (typeof constraints)[number];
     value: any;
   };
   constructor(db: DB, table: TableWithColumns<T>) {
@@ -21,9 +36,11 @@ export class SelectQueryBuilder<T extends TableConfig<{}>> {
     constraint: Constraint,
     value: T["columns"][Column] extends Type<infer T> ? T : unknown
   ) {
+    const c = constraints.find((c) => c.symbol === constraint);
+    if (!c) throw new SyntaxError(`Invalid constraint: ${constraint}`);
     this._where = {
       column,
-      constraint,
+      constraint: c,
       value,
     };
     return this;
@@ -33,8 +50,10 @@ export class SelectQueryBuilder<T extends TableConfig<{}>> {
     const json = await this._db.getJSON();
     const table = json[this._table._config.name];
     if (this._where) {
-      const { column, /* constraint, */ value } = this._where;
-      const result = table.find((row: any) => row[column] === value);
+      const { column, constraint, value } = this._where;
+      const result = table.find((row: any) =>
+        constraint.check(value, row[column])
+      );
       if (!result) return null;
       return result;
     }
@@ -45,8 +64,10 @@ export class SelectQueryBuilder<T extends TableConfig<{}>> {
     const json = await this._db.getJSON();
     const table = json[this._table._config.name];
     if (this._where) {
-      const { column, /* constraint, */ value } = this._where;
-      const results = table.filter((row: any) => row[column] === value);
+      const { column, constraint, value } = this._where;
+      const results = table.filter((row: any) =>
+        constraint.check(value, row[column])
+      );
       if (!results?.length) return null;
       return results;
     }
