@@ -2,19 +2,35 @@ import { TableConfig, TableWithColumns } from "../../schema/table";
 import { Type } from "../../schema/types";
 import { DB } from "../index";
 
+const numberConstraints = [
+  {
+    symbol: ">",
+    check: (value: any, columnValue: any) => {
+      return value > columnValue;
+    },
+  },
+  {
+    symbol: ">=",
+    check: (value: any, columnValue: any) => {
+      return value >= columnValue;
+    },
+  },
+] as const;
+
 const constraints = [
   {
     symbol: "=",
-    check: (value: string, columnValue: string) => {
+    check: (value: any, columnValue: any) => {
       return value === columnValue;
     },
   },
   {
     symbol: "!=",
-    check: (value: string, columnValue: string) => {
+    check: (value: any, columnValue: any) => {
       return value !== columnValue;
     },
   },
+  ...numberConstraints,
 ] as const;
 
 type Constraint = (typeof constraints)[number]["symbol"];
@@ -38,6 +54,11 @@ export class SelectQueryBuilder<T extends TableConfig<{}>> {
   ) {
     const c = constraints.find((c) => c.symbol === constraint);
     if (!c) throw new SyntaxError(`Invalid constraint: ${constraint}`);
+    if (
+      numberConstraints.find((c2) => c2.symbol === c.symbol) &&
+      (this._table._config.columns as any)[column].name !== "number"
+    )
+      throw new SyntaxError(`Invalid constraint: ${constraint}`);
     this._where = {
       column,
       constraint: c,
