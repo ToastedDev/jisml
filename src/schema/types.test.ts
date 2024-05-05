@@ -1,11 +1,13 @@
 import { expect, test } from "bun:test";
-import { number, string } from "./types";
+import { number, reference, string } from "./types";
 
 test("Types are created", () => {
   const stringType = string();
   const numberType = number();
+  const referenceType = reference(stringType);
   expect(stringType.name).toBe("string");
   expect(numberType.name).toBe("number");
+  expect(referenceType.name).toBe("string");
 });
 
 test("String type allows string", () => {
@@ -41,4 +43,18 @@ test("Number type disallows NaN", () => {
   const result = numberType.validate(NaN) as any;
   expect(result.valid).toBe(false);
   expect(result.error).toBe("Value must be a number");
+});
+
+test("Reference type has a reference", () => {
+  const stringType = string();
+  const referenceType = reference(stringType);
+  expect(referenceType.name).toBe("string");
+});
+
+test("Reference type allows the referenced type", () => {
+  const stringType = string();
+  const referenceType = reference(stringType);
+  const result = referenceType.validate("hello") as any;
+  expect(result.valid).toBe(true);
+  expect(result.result).toBe("hello");
 });
