@@ -15,6 +15,18 @@ const numberConstraints = [
       return columnValue >= value;
     },
   },
+  {
+    symbol: "<",
+    check: (value: any, columnValue: any) => {
+      return columnValue <= value;
+    },
+  },
+  {
+    symbol: "<=",
+    check: (value: any, columnValue: any) => {
+      return columnValue <= value;
+    },
+  },
 ] as const;
 
 const constraints = [
