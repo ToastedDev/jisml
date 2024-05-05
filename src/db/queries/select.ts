@@ -6,13 +6,13 @@ const numberConstraints = [
   {
     symbol: ">",
     check: (value: any, columnValue: any) => {
-      return value > columnValue;
+      return columnValue > value;
     },
   },
   {
     symbol: ">=",
     check: (value: any, columnValue: any) => {
-      return value >= columnValue;
+      return columnValue >= value;
     },
   },
 ] as const;

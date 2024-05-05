@@ -6,7 +6,7 @@ test("Table is created", () => {
   const users = table("users", {
     id: string(),
   });
-  expect(users.name).toBe("users");
+  expect(users._config.name).toBe("users");
 });
 
 test("Table has a column", () => {
