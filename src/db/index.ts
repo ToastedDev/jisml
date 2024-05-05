@@ -1,6 +1,7 @@
 import { exists, readFile, writeFile } from "node:fs/promises";
 import { TableConfig, TableWithColumns } from "../schema/table";
 import { DBOptions } from "./options";
+import { DeleteQueryBuilder } from "./queries/delete";
 import { InsertQueryBuilder } from "./queries/insert";
 import { SelectQueryBuilder } from "./queries/select";
 import { UpdateQueryBuilder } from "./queries/update";
@@ -58,6 +59,9 @@ export class DB {
   }
   update<T extends TableConfig<{}>>(table: TableWithColumns<T>) {
     return new UpdateQueryBuilder(this, table);
+  }
+  delete<T extends TableConfig<{}>>(table: TableWithColumns<T>) {
+    return new DeleteQueryBuilder(this, table);
   }
 }
 
