@@ -35,7 +35,14 @@ export class SelectQueryBuilder<T extends TableConfig<{}>> {
     return this;
   }
 
-  async first() {
+  async first(): Promise<
+    | {
+        [K in keyof T["columns"]]: T["columns"][K] extends Type<infer T>
+          ? T
+          : unknown;
+      }
+    | null
+  > {
     const json = await this._db.getJSON();
     const table = json[this._table._config.name];
     if (this._where) {
@@ -49,7 +56,13 @@ export class SelectQueryBuilder<T extends TableConfig<{}>> {
     return table[0];
   }
 
-  async all() {
+  async all(): Promise<
+    | {
+        [K in keyof T["columns"]]: T["columns"][K] extends Type<infer T>
+          ? T
+          : unknown;
+      }[]
+  > {
     const json = await this._db.getJSON();
     const table = json[this._table._config.name];
     if (this._where) {
@@ -57,7 +70,7 @@ export class SelectQueryBuilder<T extends TableConfig<{}>> {
       const results = table.filter((row: any) =>
         constraint.check(value, row[column])
       );
-      if (!results?.length) return null;
+      if (!results?.length) return [];
       return results;
     }
     return table;
