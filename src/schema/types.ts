@@ -8,31 +8,30 @@ type ValidatorResult<T> =
       error: string;
     };
 
-export class Type<
-  T = any,
-  O extends Record<string, any> = Record<string, any>
-> {
+export class Type<T = any> {
   private _name: string;
   private _validator: (value: unknown) => ValidatorResult<T>;
-  private _options?: O;
+  private _reference: boolean;
   constructor(
     name: string,
-    validator: (this: Type<T, O>, value: unknown) => ValidatorResult<T>,
-    options?: O,
-    public reference: boolean = false
+    validator: (value: unknown) => ValidatorResult<T>,
+    reference: boolean = false
   ) {
     this._name = name;
     this._validator = validator.bind(this);
-    this._options = options;
+    this._reference = reference;
   }
   get name() {
     return this._name;
   }
-  get options() {
-    return this._options;
+  get reference() {
+    return this._reference;
+  }
+  set reference(reference: boolean) {
+    this._reference = reference;
   }
   isReference() {
-    return this.reference;
+    return this._reference;
   }
   validate(value: unknown): ValidatorResult<T> {
     return this._validator(value);
@@ -40,34 +39,30 @@ export class Type<
 }
 
 const typeGenerator =
-  <T, O extends Record<string, any> = Record<string, any>>(
+  <T>(
     typeName: string,
-    validator: (this: Type<T, O>, value: unknown) => ValidatorResult<T>
+    validator: (this: Type<T>, value: unknown) => ValidatorResult<T>
   ) =>
-  (options?: O) =>
-    new Type<T, O>(typeName, validator, options);
+  () =>
+    new Type<T>(typeName, validator);
 
-export const string = typeGenerator<
-  string,
-  {
-    length: number;
-  }
->("string", function (value) {
-  if (typeof value === "string") {
-    if (this.options?.length) {
-      if (value.length < this.options.length) {
-        return { valid: true, result: value };
-      } else {
-        return {
-          valid: false,
-          error: `Value must be less than ${this.options.length} characters`,
-        };
+export const string = (options: { length?: number } = {}) =>
+  typeGenerator<string>("string", (value) => {
+    if (typeof value === "string") {
+      if (options?.length) {
+        if (value.length < options.length) {
+          return { valid: true, result: value };
+        } else {
+          return {
+            valid: false,
+            error: `Value must be less than ${options.length} characters`,
+          };
+        }
       }
+      return { valid: true, result: value };
     }
-    return { valid: true, result: value };
-  }
-  return { valid: false, error: "Value must be a string" };
-});
+    return { valid: false, error: "Value must be a string" };
+  })();
 
 export const number = typeGenerator<number>("number", (value) => {
   if (typeof value === "number" && !isNaN(value)) {
