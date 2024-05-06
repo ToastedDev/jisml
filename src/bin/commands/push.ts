@@ -4,7 +4,8 @@ import { logger } from "../utils/logger";
 import createJiti from "jiti";
 import { Table, TableConfig } from "../../schema/table";
 import { join } from "node:path";
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
+import inquirer from "inquirer";
 
 const keys = (x: any) =>
   Object.getOwnPropertyNames(x).concat(
@@ -19,6 +20,13 @@ const classToObject = (clss: any) =>
       (object as any)[key] = arr ? val.map(classToObject) : val;
       return object;
     }, {});
+
+function getMissingKeys(obj1: any, obj2: any) {
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+  const missingKeys = keys1.filter((key) => !keys2.includes(key));
+  return missingKeys;
+}
 
 export const pushCommand = new Command()
   .name("push")
@@ -54,13 +62,35 @@ export const pushCommand = new Command()
       extensions: [".js", ".ts"],
     });
 
+    let db = JSON.parse(
+      await readFile(join(process.cwd(), databaseFile), "utf8")
+    );
+    if (!db) db = {};
+
     const schemaFilePath = jiti.resolve(schemaFile, { paths: [process.cwd()] });
     const exports = jiti(schemaFilePath);
     const schema: Record<string, Table<TableConfig<{}>>> = classToObject(
       exports
     );
 
-    const db: Record<string, any> = {};
+    const missingKeys = getMissingKeys(db, schema);
+    if (missingKeys.length) {
+      for (const key of missingKeys) {
+        const { shouldDelete } = await inquirer.prompt<{
+          shouldDelete: boolean;
+        }>([
+          {
+            type: "confirm",
+            name: "shouldDelete",
+            message: `Delete table \`${key}\`? This will cause data loss.`,
+          },
+        ]);
+
+        if (shouldDelete) {
+          delete db[key];
+        }
+      }
+    }
 
     for (const table of Object.values(schema)) {
       if (!db[table._config.name]) db[table._config.name] = [];
