@@ -2,17 +2,30 @@
   "name": "my-package",
   "license": "MIT",
   "version": "0.0.1",
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/es/index.mjs",
+  "types": "./dist/cjs/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/es/index.d.mts",
+        "default": "./dist/es/index.mjs"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    }
+  },
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "build": "bunchee",
     "release": "pnpm run build && changeset publish",
     "typecheck": "tsc"
   },
   "devDependencies": {
     "@changesets/cli": "^2.26.0",
     "@types/bun": "^1.1.1",
+    "bunchee": "^5.1.5",
     "tsup": "^6.5.0",
     "typescript": "^4.9.4"
   }
