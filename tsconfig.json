@@ -10,8 +10,8 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
     /* If NOT transpiling with TypeScript: */
-    "moduleResolution": "Node16",
-    "module": "ESNext",
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
     "noEmit": true,
     /* If your code runs in the DOM: */
     "lib": ["es2022", "dom", "dom.iterable"]
