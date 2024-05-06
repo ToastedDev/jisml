@@ -5,7 +5,22 @@ interface Config {
   schemaFile: string;
   /** A database file */
   databaseFile: string;
+  /**
+   * Verbose mode
+   * When this is enabled, verbose logs will be written to the console.
+   */
+  verbose?: boolean;
+  /**
+   * Strict mode
+   * When this is enabled, you will be promoted when doing a destructive action.
+   * */
+  strict?: boolean;
 }
+
+const baseConfig = {
+  verbose: true,
+  strict: true,
+} as Config;
 
 export async function getConfig() {
   const { config } = await loadConfig<Config>({
@@ -14,9 +29,8 @@ export async function getConfig() {
     globalRc: false,
     dotenv: false,
   });
-  if (!config) return null;
-  if (!Object.keys(config).length) return null;
-  return config;
+  if (!config || !Object.keys(config).length) return baseConfig;
+  return Object.assign(config, baseConfig);
 }
 
 export const defineConfig = (config: Config) => config;
