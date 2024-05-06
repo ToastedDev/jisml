@@ -2,6 +2,11 @@
   "name": "jisml",
   "license": "MIT",
   "version": "0.0.0",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "author": "ToastedToast (https://toasted.dev)",
   "main": "./dist/cjs/index.js",
   "module": "./dist/es/index.mjs",
   "types": "./dist/cjs/index.d.ts",
@@ -26,7 +31,6 @@
     "@changesets/cli": "^2.26.0",
     "@types/bun": "^1.1.1",
     "bunchee": "^5.1.5",
-    "tsup": "^6.5.0",
     "typescript": "^4.9.4"
   }
 }
