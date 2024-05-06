@@ -29,7 +29,6 @@ export class UpdateQueryBuilder<
     constraint: Constraint,
     value: T["columns"][Column] extends Type<infer T> ? T : unknown
   ) {
-    if (!this._value) throw new Error("No value set");
     return new UpdateQueryWithWhere(
       this._db,
       this._table,
@@ -44,6 +43,13 @@ export class UpdateQueryBuilder<
 
   async execute() {
     const json = await this._db.getJSON();
+    for (const [k, v] of Object.entries(this._value)) {
+      const column = (this._table._config.columns as any)[k] as Type;
+      if (!column) throw new Error(`Invalid column: ${k}`);
+      const result = column.validate(v);
+      if (!result.valid)
+        throw new Error(`Invalid value: ${v} (${result.error})`);
+    }
     json[this._table._config.name].forEach((row: any) =>
       Object.assign(row, this._value)
     );
@@ -80,6 +86,13 @@ class UpdateQueryWithWhere<
       (this._table._config.columns as any)[where.column].name !== "number"
     )
       throw new SyntaxError(`Invalid constraint: ${where.constraint}`);
+
+    const column = (this._table._config.columns as any)[where.column] as Type;
+    if (!column) throw new Error(`Invalid column: ${String(where.column)}`);
+    const result = column.validate(where.value);
+    if (!result.valid)
+      throw new Error(`Invalid value: ${where.value} (${result.error})`);
+
     this._where = {
       column: where.column,
       constraint: c,
@@ -98,6 +111,13 @@ class UpdateQueryWithWhere<
   async execute() {
     const json = await this._db.getJSON();
     const table = json[this._table._config.name];
+    for (const [k, v] of Object.entries(this._value)) {
+      const column = (this._table._config.columns as any)[k] as Type;
+      if (!column) throw new Error(`Invalid column: ${k}`);
+      const result = column.validate(v);
+      if (!result.valid)
+        throw new Error(`Invalid value: ${v} (${result.error})`);
+    }
     const { column, constraint, value } = this._where;
     const index = table.findIndex((row: any) =>
       constraint.check(value, row[column])

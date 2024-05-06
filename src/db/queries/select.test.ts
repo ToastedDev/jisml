@@ -50,6 +50,14 @@ test("Select first with <= constraint", async () => {
   expect(user?.id).toBeLessThanOrEqual(2);
 });
 
+test("Select where clause disallows invalid values", async () => {
+  const t = async () => {
+    // @ts-expect-error
+    await db.select(users).where("id", "=", "test").first();
+  };
+  expect(t).toThrow();
+});
+
 test("Select all", async () => {
   const allUsers = await db.select(users).all();
   expect(allUsers[0]?.id).toBe(1);

@@ -71,6 +71,13 @@ class SelectQueryWithWhere<T extends TableConfig<{}>> {
       (this._table._config.columns as any)[where.column].name !== "number"
     )
       throw new SyntaxError(`Invalid constraint: ${where.constraint}`);
+
+    const column = (this._table._config.columns as any)[where.column] as Type;
+    if (!column) throw new Error(`Invalid column: ${String(where.column)}`);
+    const result = column.validate(where.value);
+    if (!result.valid)
+      throw new Error(`Invalid value: ${where.value} (${result.error})`);
+
     this._where = {
       column: where.column,
       constraint: c,

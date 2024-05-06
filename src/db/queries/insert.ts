@@ -24,10 +24,19 @@ export class InsertQueryBuilder<
     this._values = values;
     return this;
   }
+
   async execute() {
     const json = await this._db.getJSON();
     const table = json[this._table._config.name];
-    // TODO: validate values
+    for (const value of this._values) {
+      for (const [k, v] of Object.entries(value)) {
+        const column = (this._table._config.columns as any)[k] as Type;
+        if (!column) throw new Error(`Invalid column: ${k}`);
+        const result = column.validate(v);
+        if (!result.valid)
+          throw new Error(`Invalid value: ${v} (${result.error})`);
+      }
+    }
     table.push(...this._values);
     await this._db.setJSON(json);
   }

@@ -16,13 +16,21 @@ beforeAll(async () => {
 });
 
 test("Delete one", async () => {
-  await db.delete(users).where("id", "=", 1).execute();
+  await db.delete(users).where("id", "=", 1);
   const user = await db.select(users).where("id", "=", 1).first();
   expect(user).toEqual(null);
 });
 
 test("Delete all", async () => {
-  await db.delete(users).execute();
+  await db.delete(users);
   const user = await db.select(users).where("id", "=", 1).first();
   expect(user).toEqual(null);
+});
+
+test("Delete where clause disallows invalid values", async () => {
+  const t = async () => {
+    // @ts-expect-error
+    await db.delete(users).where("id", "=", "test");
+  };
+  expect(t).toThrow();
 });

@@ -28,3 +28,22 @@ test("Update all", async () => {
   expect(user1).toEqual({ id: 1, name: "Updated" });
   expect(user2).toEqual({ id: 2, name: "Updated" });
 });
+
+test("Update disallows invalid values", async () => {
+  const t = async () => {
+    // @ts-expect-error
+    await db.update(users).set({ name: 1 }).where("id", "=", 1);
+  };
+  expect(t).toThrow();
+});
+
+test("Update where clause disallows invalid values", async () => {
+  const t = async () => {
+    await db
+      .update(users)
+      .set({ name: "ToastedToast" })
+      // @ts-expect-error
+      .where("id", "=", "test");
+  };
+  expect(t).toThrow();
+});

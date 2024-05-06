@@ -24,3 +24,11 @@ test("Insert multiple", async () => {
   expect(user1).not.toEqual(null);
   expect(user2).not.toEqual(null);
 });
+
+test("Insert disallows invalid values", async () => {
+  const t = async () => {
+    // @ts-expect-error
+    await db.insert(users).values({ id: "test", name: "ToastedToast" });
+  };
+  expect(t).toThrow();
+});
