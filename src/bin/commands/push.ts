@@ -94,6 +94,28 @@ export const pushCommand = new Command()
 
     for (const table of Object.values(schema)) {
       if (!db[table._config.name]) db[table._config.name] = [];
+      const firstValue = db[table._config.name][0];
+      if (!firstValue) continue;
+      const missingKeys = getMissingKeys(firstValue, table._config.columns);
+      if (missingKeys.length) {
+        for (const key of missingKeys) {
+          const { shouldDelete } = await inquirer.prompt<{
+            shouldDelete: boolean;
+          }>([
+            {
+              type: "confirm",
+              name: "shouldDelete",
+              message: `Remove column \`${key}\` from all values? This will cause data loss.`,
+            },
+          ]);
+
+          if (shouldDelete) {
+            for (const value of db[table._config.name]) {
+              delete value[key];
+            }
+          }
+        }
+      }
     }
 
     await writeFile(
