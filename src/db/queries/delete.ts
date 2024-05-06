@@ -9,11 +9,7 @@ export class DeleteQueryBuilder<
 > extends QueryPromise<void> {
   private _db: DB;
   private _table: TableWithColumns<T>;
-  private _where?: {
-    column: keyof T;
-    constraint: (typeof constraints)[number];
-    value: any;
-  };
+
   constructor(db: DB, table: TableWithColumns<T>) {
     super();
     this._db = db;
@@ -24,35 +20,68 @@ export class DeleteQueryBuilder<
     constraint: Constraint,
     value: T["columns"][Column] extends Type<infer T> ? T : unknown
   ) {
-    const c = constraints.find((c) => c.symbol === constraint);
-    if (!c) throw new SyntaxError(`Invalid constraint: ${constraint}`);
+    return new DeleteQueryWithWhere(this._db, this._table, {
+      column,
+      constraint,
+      value,
+    });
+  }
+
+  async execute() {
+    const json = await this._db.getJSON();
+    json[this._table._config.name] = [];
+    await this._db.setJSON(json);
+  }
+}
+
+class DeleteQueryWithWhere<
+  T extends TableConfig<{}>
+> extends QueryPromise<void> {
+  private _table: TableWithColumns<T>;
+  private _db: DB;
+  private _where: {
+    column: keyof T;
+    constraint: (typeof constraints)[number];
+    value: any;
+  };
+
+  constructor(
+    db: DB,
+    table: TableWithColumns<T>,
+    where: {
+      column: keyof T;
+      constraint: Constraint;
+      value: any;
+    }
+  ) {
+    super();
+    this._db = db;
+    this._table = table;
+
+    const c = constraints.find((c) => c.symbol === where.constraint);
+    if (!c) throw new SyntaxError(`Invalid constraint: ${where.constraint}`);
     if (
       numberConstraints.find((c2) => c2.symbol === c.symbol) &&
-      (this._table._config.columns as any)[column].name !== "number"
+      (this._table._config.columns as any)[where.column].name !== "number"
     )
-      throw new SyntaxError(`Invalid constraint: ${constraint}`);
+      throw new SyntaxError(`Invalid constraint: ${where.constraint}`);
     this._where = {
-      column,
+      column: where.column,
       constraint: c,
-      value,
+      value: where.value,
     };
-    return this;
   }
 
   async execute() {
     const json = await this._db.getJSON();
     const table = json[this._table._config.name];
-    if (this._where) {
-      const { column, constraint, value } = this._where;
-      const index = table.findIndex((row: any) =>
-        constraint.check(value, row[column])
-      );
-      if (index === -1)
-        throw new Error(`No row found with ${String(column)} of ${value}`);
-      table.splice(index, 1);
-    } else {
-      json[this._table._config.name] = [];
-    }
+    const { column, constraint, value } = this._where;
+    const index = table.findIndex((row: any) =>
+      constraint.check(value, row[column])
+    );
+    if (index === -1)
+      throw new Error(`No row found with ${String(column)} of ${value}`);
+    table.splice(index, 1);
     await this._db.setJSON(json);
   }
 }
