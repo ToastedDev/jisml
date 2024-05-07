@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { array, boolean, number, reference, string } from "./types";
+import { array, boolean, number, reference, references, string } from "./types";
 
 test("Types are created", () => {
   const stringType = string();
@@ -7,11 +7,13 @@ test("Types are created", () => {
   const booleanType = boolean();
   const arrayType = array(string());
   const referenceType = reference(stringType);
+  const referencesType = references(stringType);
   expect(stringType.name).toBe("string");
   expect(numberType.name).toBe("number");
   expect(booleanType.name).toBe("boolean");
   expect(arrayType.name).toBe("array");
   expect(referenceType.name).toBe("string");
+  expect(referencesType.name).toBe("array");
 });
 
 test("Types can have default values", () => {
@@ -20,11 +22,13 @@ test("Types can have default values", () => {
   const booleanType = boolean().default(true);
   const arrayType = array(string()).default(["hello"]);
   const referenceType = reference(stringType);
+  const referencesType = references(stringType);
   expect(stringType.defaultValue).toBe("hello");
   expect(numberType.defaultValue).toBe(1);
   expect(booleanType.defaultValue).toBe(true);
   expect(arrayType.defaultValue).toEqual(["hello"]);
   expect(referenceType.defaultValue).toBe("hello");
+  expect(referencesType.defaultValue).toEqual(["hello"]);
 });
 
 test("Types can have default values that are functions", () => {
@@ -33,11 +37,13 @@ test("Types can have default values that are functions", () => {
   const booleanType = boolean().defaultFn(() => true);
   const arrayType = array(string()).defaultFn(() => ["hello"]);
   const referenceType = reference(stringType);
+  const referencesType = references(stringType);
   expect(stringType.defaultValue).toBe("hello");
   expect(numberType.defaultValue).toBe(1);
   expect(booleanType.defaultValue).toBe(true);
   expect(arrayType.defaultValue).toEqual(["hello"]);
   expect(referenceType.defaultValue).toBe("hello");
+  expect(referencesType.defaultValue).toEqual(["hello"]);
 });
 
 test("String type allows string", () => {
@@ -134,14 +140,21 @@ test("Array type disallows arrays with incorrect types", () => {
 test("Reference type has a reference", () => {
   const stringType = string();
   const referenceType = reference(stringType);
+  const referencesType = references(stringType);
   expect(referenceType.name).toBe("string");
   expect(referenceType.reference).toBe(true);
+  expect(referencesType.name).toBe("array");
+  expect(referencesType.reference).toBe(true);
 });
 
 test("Reference type allows the referenced type", () => {
   const stringType = string();
   const referenceType = reference(stringType);
-  const result = referenceType.validate("hello") as any;
-  expect(result.valid).toBe(true);
-  expect(result.result).toBe("hello");
+  const referencesType = references(stringType);
+  const result1 = referenceType.validate("hello") as any;
+  const result2 = referencesType.validate(["hello"]) as any;
+  expect(result1.valid).toBe(true);
+  expect(result1.result).toBe("hello");
+  expect(result2.valid).toBe(true);
+  expect(result2.result).toEqual(["hello"]);
 });

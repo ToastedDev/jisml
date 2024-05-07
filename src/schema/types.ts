@@ -108,12 +108,25 @@ export const array = <T extends Type>(type: T) =>
   })();
 
 export const reference = <Column extends Type>(
-  column: Column | { name: string; type: Column }
+  columnOrType: Column | { name: string; type: Column }
 ) => {
-  if (column instanceof Type) {
-    column.reference = true;
-    return column;
+  if (columnOrType instanceof Type) {
+    columnOrType.reference = true;
+    return columnOrType;
   }
-  column.type.reference = true;
-  return column.type;
+  columnOrType.type.reference = true;
+  return columnOrType.type;
+};
+
+export const references = <Column extends Type>(
+  columnOrType: Column | { name: string; type: Column }
+) => {
+  const column =
+    columnOrType instanceof Type ? columnOrType : columnOrType.type;
+  const newType = array<Column>(reference(columnOrType));
+  newType.reference = true;
+  if (column.defaultValue && !Array.isArray(column.defaultValue)) {
+    newType.defaultValue = [column.defaultValue] as any;
+  }
+  return newType;
 };
