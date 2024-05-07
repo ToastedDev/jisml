@@ -1,19 +1,15 @@
 import { Command } from "commander";
-import { join } from "node:path";
-import { readFile } from "node:fs/promises";
 import { pushCommand } from "./commands/push";
-
-async function getVersion() {
-  const packageJsonPath = join(__dirname, "../../package.json");
-  const packageJson = JSON.parse(await readFile(packageJsonPath, "utf8"));
-  return packageJson?.version ?? "1.0.0";
-}
+import { mainCommandAction } from "./commands/main";
+import { getVersion } from "./utils/get-version";
 
 async function main() {
   const program = new Command()
     .name("jisml")
     .description("An ORM that makes JSON a database")
-    .version(await getVersion());
+    .version(await getVersion(), "-v, --version", "Output the version number")
+    .option("-db, --databaseFile <database file>", "A database file")
+    .action(mainCommandAction);
 
   program.addCommand(pushCommand);
 
