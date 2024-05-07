@@ -62,8 +62,11 @@ export const pushCommand = new Command()
         }
         databaseFile = config.databaseFile;
       }
-      if (typeof verbose === "undefined") verbose = !!config?.verbose;
-      if (typeof strict === "undefined") strict = !!config?.strict;
+      if (typeof verbose === "undefined")
+        verbose =
+          typeof config?.verbose !== "undefined" ? config.verbose : true;
+      if (typeof strict === "undefined")
+        strict = typeof config?.strict !== "undefined" ? config.strict : true;
 
       const jiti = createJiti(undefined as unknown as string, {
         interopDefault: true,
