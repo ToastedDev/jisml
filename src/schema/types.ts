@@ -93,6 +93,34 @@ export const boolean = typeGenerator<boolean>("boolean", (value) => {
   return { valid: false, error: "Value must be a boolean" };
 });
 
+export const object = <T extends Record<string, Type>>(type: T) =>
+  typeGenerator<{
+    [K in keyof T]: T[K] extends Type<infer TypeScriptType>
+      ? TypeScriptType
+      : never;
+  }>("object", (value) => {
+    if (typeof value === "object" && value !== null) {
+      for (const key of Object.keys(type)) {
+        const t = type[key]!;
+        if (
+          (value as any)[key] === undefined &&
+          type.defaultValue !== undefined
+        ) {
+          (value as any)[key] = type.defaultValue;
+        }
+        const result = t.validate((value as any)[key]);
+        if (!result.valid) {
+          return {
+            valid: false,
+            error: `Invalid value for ${key}: ${result.error}`,
+          };
+        }
+      }
+      return { valid: true, result: value as any };
+    }
+    return { valid: false, error: "Value must be an object" };
+  })();
+
 export const array = <T extends Type>(type: T) =>
   typeGenerator<
     T extends Type<infer TypeScriptType> ? TypeScriptType[] : never
