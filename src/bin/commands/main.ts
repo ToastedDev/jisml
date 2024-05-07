@@ -9,9 +9,10 @@ import { readFile, exists } from "node:fs/promises";
 export const evalDb = (code: string, db: any, dbPath?: string) => {
   return new Promise((resolve, reject) => {
     try {
+      // TODO: move away from eval
       const result = eval(`
         let baseDb = ${JSON.stringify(db)};
-
+      
         const validators = {
           get(target, key) {
             if (typeof target[key] === 'object' && target[key] !== null) {
