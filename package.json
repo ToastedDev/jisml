@@ -34,7 +34,7 @@
   },
   "scripts": {
     "build": "bunchee",
-    "release": "pnpm run build && changeset publish",
+    "release": "bun run build && changeset publish",
     "typecheck": "tsc"
   },
   "dependencies": {
