@@ -8,43 +8,30 @@ import { UpdateQueryBuilder } from "./queries/update";
 
 export class DB {
   private _options: DBOptions;
-  private _db;
+  private _db: any;
   constructor(options: DBOptions) {
     if (!options) throw new SyntaxError("Options must be provided");
     if (!options.path) throw new SyntaxError("Path must be provided");
 
-    this._options = Object.assign({ autoSave: true }, options);
-    this._db =
-      this._options.path === ":test:"
-        ? {
-            users: [],
-          }
-        : {};
+    this._options = Object.assign({ autoSave: true, cache: false }, options);
     this.fillDb();
   }
   get path() {
     return this._options.path;
   }
   async getJSON() {
-    return this._options.path === ":memory:" || this._options.path === ":test:"
+    return this._options.cache
       ? this._db
       : JSON.parse(await readFile(this._options.path, "utf8"));
   }
   async setJSON(json: any) {
     this._db = json;
-    if (
-      this._options.path !== ":memory:" &&
-      this._options.path !== ":test:" &&
-      this._options.autoSave
-    )
-      await this.save();
+    if (this._options.autoSave) await this.save();
   }
   async save() {
     await writeFile(this._options.path, JSON.stringify(this._db));
   }
   private async fillDb() {
-    if (this._options.path === ":memory:" || this._options.path === ":test:")
-      return;
     if (!(await exists(this._options.path)))
       throw new Error(`File does not exist: ${this._options.path}`);
 

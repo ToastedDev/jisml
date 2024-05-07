@@ -1,9 +1,17 @@
-import { expect, test, beforeAll } from "bun:test";
+import { expect, test, beforeAll, mock } from "bun:test";
 import { table } from "../../schema/table";
 import { number, string } from "../../schema/types";
 import { jsml } from "../index";
 
-const db = jsml({ path: ":test:" });
+let mockDb = JSON.stringify({ users: [] });
+
+mock.module("fs/promises", () => ({
+  readFile: async () => mockDb,
+  writeFile: async (_path: string, data: string) => (mockDb = data),
+  exists: () => true,
+}));
+
+const db = jsml({ path: "./db.json" });
 const users = table("users", {
   id: number(),
   name: string(),
