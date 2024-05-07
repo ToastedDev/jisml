@@ -1,30 +1,36 @@
 import { expect, test } from "bun:test";
-import { number, reference, string } from "./types";
+import { array, number, reference, string } from "./types";
 
 test("Types are created", () => {
   const stringType = string();
   const numberType = number();
+  const arrayType = array(string());
   const referenceType = reference(stringType);
   expect(stringType.name).toBe("string");
   expect(numberType.name).toBe("number");
+  expect(arrayType.name).toBe("array");
   expect(referenceType.name).toBe("string");
 });
 
 test("Types can have default values", () => {
   const stringType = string().default("hello");
   const numberType = number().default(1);
+  const arrayType = array(string()).default(["hello"]);
   const referenceType = reference(stringType);
   expect(stringType.defaultValue).toBe("hello");
   expect(numberType.defaultValue).toBe(1);
+  expect(arrayType.defaultValue).toEqual(["hello"]);
   expect(referenceType.defaultValue).toBe("hello");
 });
 
 test("Types can have default values that are functions", () => {
   const stringType = string().defaultFn(() => "hello");
   const numberType = number().defaultFn(() => 1);
+  const arrayType = array(string()).defaultFn(() => ["hello"]);
   const referenceType = reference(stringType);
   expect(stringType.defaultValue).toBe("hello");
   expect(numberType.defaultValue).toBe(1);
+  expect(arrayType.defaultValue).toEqual(["hello"]);
   expect(referenceType.defaultValue).toBe("hello");
 });
 
@@ -68,6 +74,34 @@ test("Number type disallows NaN", () => {
   const result = numberType.validate(NaN) as any;
   expect(result.valid).toBe(false);
   expect(result.error).toBe("Value must be a number");
+});
+
+test("Array type allows arrays", () => {
+  const arrayType = array(string());
+  const result = arrayType.validate(["hello"]) as any;
+  expect(result.valid).toBe(true);
+  expect(result.result).toEqual(["hello"]);
+});
+
+test("Array type can be created with an array type", () => {
+  const arrayType = array(array(string()));
+  const result = arrayType.validate([["hello"]]) as any;
+  expect(result.valid).toBe(true);
+  expect(result.result).toEqual([["hello"]]);
+});
+
+test("Array type disallows non-arrays", () => {
+  const arrayType = array(string());
+  const result = arrayType.validate("hello") as any;
+  expect(result.valid).toBe(false);
+  expect(result.error).toBe("Value must be an array");
+});
+
+test("Array type disallows arrays with incorrect types", () => {
+  const arrayType = array(string());
+  const result = arrayType.validate([1]) as any;
+  expect(result.valid).toBe(false);
+  expect(result.error).toBe("Invalid type");
 });
 
 test("Reference type has a reference", () => {

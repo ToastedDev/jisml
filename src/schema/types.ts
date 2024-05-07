@@ -80,6 +80,20 @@ export const number = typeGenerator<number>("number", (value) => {
   return { valid: false, error: "Value must be a number" };
 });
 
+export const array = <T extends Type>(type: T) =>
+  typeGenerator<
+    T extends Type<infer TypeScriptType> ? TypeScriptType[] : never
+  >("array", (value) => {
+    if (Array.isArray(value)) {
+      if (value.every((val) => type.validate(val).valid)) {
+        return { valid: true, result: value as any };
+      } else {
+        return { valid: false, error: "Invalid type" };
+      }
+    }
+    return { valid: false, error: "Value must be an array" };
+  })();
+
 export const reference = <Column extends Type>(
   column: Column | { name: string; type: Column }
 ) => {
