@@ -1,4 +1,5 @@
 export { jsml, jsml as default } from "./db";
+export type { DBOptions } from "./db/options";
 export { table } from "./schema/table";
 export {
   string,
@@ -9,4 +10,4 @@ export {
   reference,
   references,
 } from "./schema/types";
-export { defineConfig } from "./bin/utils/config";
+export { defineConfig, type Config } from "./bin/utils/config";

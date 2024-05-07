@@ -1,6 +1,6 @@
 import { loadConfig } from "c12";
 
-interface Config {
+export interface Config {
   /** A schema file */
   schemaFile: string;
   /** A database file */
