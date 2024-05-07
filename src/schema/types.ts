@@ -80,7 +80,13 @@ export const number = typeGenerator<number>("number", (value) => {
   return { valid: false, error: "Value must be a number" };
 });
 
-export const reference = <Column extends Type>(column: Column) => {
-  column.reference = true;
-  return column;
+export const reference = <Column extends Type>(
+  column: Column | { name: string; type: Column }
+) => {
+  if (column instanceof Type) {
+    column.reference = true;
+    return column;
+  }
+  column.type.reference = true;
+  return column.type;
 };
