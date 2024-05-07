@@ -23,7 +23,7 @@ export const evalDb = (code: string, db: any, dbPath?: string) => {
           async set(target, prop, val) {
             target[prop] = val;
 
-            if(${typeof dbPath} !== "undefined") {
+            if("${typeof dbPath}" !== "undefined") {
               const { writeFile } = await import("node:fs/promises"); 
               await writeFile("${dbPath}", JSON.stringify(baseDb, null, 2));
             }
