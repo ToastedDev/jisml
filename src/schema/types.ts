@@ -80,6 +80,19 @@ export const number = typeGenerator<number>("number", (value) => {
   return { valid: false, error: "Value must be a number" };
 });
 
+export const boolean = typeGenerator<boolean>("boolean", (value) => {
+  if (typeof value === "number") {
+    if (!(value === 0 || value === 1)) {
+      return { valid: false, error: "Value must be 0 or 1" };
+    }
+    return { valid: true, result: value === 0 ? false : true };
+  }
+  if (typeof value === "boolean") {
+    return { valid: true, result: value };
+  }
+  return { valid: false, error: "Value must be a boolean" };
+});
+
 export const array = <T extends Type>(type: T) =>
   typeGenerator<
     T extends Type<infer TypeScriptType> ? TypeScriptType[] : never
