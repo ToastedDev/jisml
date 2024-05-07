@@ -6,9 +6,8 @@ test("Database can be created", async () => {
   expect(await db.getJSON()).toEqual({});
 });
 
-test("Database can be saved", async () => {
+test("Database can be updated", async () => {
   const db = jsml({ path: ":memory:" });
   db.setJSON({ users: [{ name: "John" }] });
-  await db.save();
   expect(await db.getJSON()).toEqual({ users: [{ name: "John" }] });
 });

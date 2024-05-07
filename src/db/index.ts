@@ -37,7 +37,7 @@ export class DB {
       this._options.path !== ":test:" &&
       this._options.autoSave
     )
-      await writeFile(this._options.path, JSON.stringify(json));
+      await this.save();
   }
   async save() {
     await writeFile(this._options.path, JSON.stringify(this._db));
