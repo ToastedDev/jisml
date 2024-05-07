@@ -6,6 +6,43 @@ import { getVersion } from "../utils/get-version";
 import { join } from "node:path";
 import { readFile, exists } from "node:fs/promises";
 
+export const evalDb = (code: string, db: any, dbPath?: string) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const result = eval(`
+        let baseDb = ${JSON.stringify(db)};
+
+        const validators = {
+          get(target, key) {
+            if (typeof target[key] === 'object' && target[key] !== null) {
+              return new Proxy(target[key], validators)
+            } else {
+              return target[key];
+            }
+          },
+          async set(target, prop, val) {
+            target[prop] = val;
+
+            if(${typeof dbPath} !== "undefined") {
+              const { writeFile } = await import("node:fs/promises"); 
+              await writeFile("${dbPath}", JSON.stringify(baseDb, null, 2));
+            }
+            
+            return true;
+          }
+        }
+
+        const db = new Proxy(baseDb, validators);
+
+        ${code}
+      `);
+      return resolve(result);
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
+
 export const mainCommandAction = async function (
   this: Command,
   flags: { databaseFile?: string }
@@ -60,41 +97,7 @@ export const mainCommandAction = async function (
           break;
       }
     } else {
-      const evalDb = (code: string) => {
-        return new Promise((resolve, reject) => {
-          try {
-            const result = eval(`
-              let baseDb = ${JSON.stringify(db)};
-
-              const validators = {
-                get(target, key) {
-                  if (typeof target[key] === 'object' && target[key] !== null) {
-                    return new Proxy(target[key], validators)
-                  } else {
-                    return target[key];
-                  }
-                },
-                async set(target, prop, val) {
-                  target[prop] = val;
-
-                  const { writeFile } = await import("node:fs/promises"); 
-                  await writeFile("${dbPath}", JSON.stringify(baseDb, null, 2));
-                  
-                  return true;
-                }
-              }
-
-              const db = new Proxy(baseDb, validators);
-
-              ${code}
-            `);
-            return resolve(result);
-          } catch (err) {
-            reject(err);
-          }
-        });
-      };
-      const evaled = await evalDb(line);
+      const evaled = await evalDb(line, db, dbPath);
       console.log(evaled);
       rl.prompt();
     }
