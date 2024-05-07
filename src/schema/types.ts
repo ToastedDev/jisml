@@ -12,6 +12,7 @@ export class Type<T = any> {
   private _name: string;
   private _validator: (value: unknown) => ValidatorResult<T>;
   private _reference: boolean;
+  public defaultValue?: T;
   constructor(
     name: string,
     validator: (value: unknown) => ValidatorResult<T>,
@@ -29,6 +30,14 @@ export class Type<T = any> {
   }
   set reference(reference: boolean) {
     this._reference = reference;
+  }
+  default(value: T) {
+    this.defaultValue = value;
+    return this;
+  }
+  defaultFn(fn: () => T) {
+    this.defaultValue = fn();
+    return this;
   }
   isReference() {
     return this._reference;

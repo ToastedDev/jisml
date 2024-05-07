@@ -10,6 +10,24 @@ test("Types are created", () => {
   expect(referenceType.name).toBe("string");
 });
 
+test("Types can have default values", () => {
+  const stringType = string().default("hello");
+  const numberType = number().default(1);
+  const referenceType = reference(stringType);
+  expect(stringType.defaultValue).toBe("hello");
+  expect(numberType.defaultValue).toBe(1);
+  expect(referenceType.defaultValue).toBe("hello");
+});
+
+test("Types can have default values that are functions", () => {
+  const stringType = string().defaultFn(() => "hello");
+  const numberType = number().defaultFn(() => 1);
+  const referenceType = reference(stringType);
+  expect(stringType.defaultValue).toBe("hello");
+  expect(numberType.defaultValue).toBe(1);
+  expect(referenceType.defaultValue).toBe("hello");
+});
+
 test("String type allows string", () => {
   const stringType = string();
   const result = stringType.validate("hello") as any;
@@ -56,6 +74,7 @@ test("Reference type has a reference", () => {
   const stringType = string();
   const referenceType = reference(stringType);
   expect(referenceType.name).toBe("string");
+  expect(referenceType.reference).toBe(true);
 });
 
 test("Reference type allows the referenced type", () => {
